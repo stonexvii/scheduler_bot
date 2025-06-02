@@ -1,16 +1,8 @@
 import calendar
-from datetime import date, time
+from datetime import date
 
 from database.requests import get_month
 
-
-
-
-class Day:
-    def __init__(self, current_date: date, description: str, public: bool):
-        self.date = current_date
-        self.text = description
-        self.public = public
 
 
 class EventCalendar:

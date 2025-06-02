@@ -1,5 +1,5 @@
 from aiogram import Bot, Router
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
@@ -44,7 +44,8 @@ async def catch_new_event(message: Message, bot: Bot, state: FSMContext):
     message_text = f'{current_date.day} {MONTHS[current_date.month].alt} {current_date.year}\n'
     if response:
         events = '\n'.join(
-            [f'{event.time.hour:0>2}:{event.time.minute:0>2} - {event.description}' for event in response],
+            [f'{event.time.hour:0>2}:{event.time.minute:0>2} - {event.description}' for event in
+             sorted(response, key=lambda x: x.time)],
         )
     else:
         events = 'В этот день нет мероприятий'
@@ -58,56 +59,10 @@ async def catch_new_event(message: Message, bot: Bot, state: FSMContext):
 
 
 @command_router.message(Command('start'))
-async def command_start(message: Message):
+async def command_start(message: Message, command: CommandObject):
     current_date = date.today()
+    user_id = int(command.args) if command.args else message.from_user.id
     await message.answer(
         text=f'{MONTHS[current_date.month].main} {current_date.year}',
-        reply_markup=await ikb_days(message.from_user.id, current_date)
+        reply_markup=await ikb_days(user_id, current_date)
     )
-    # response = await get_month(message.from_user.id, current_date)
-    # for entry in response:
-    #     print(entry.date_time, entry.description)
-    # await bot.delete_message(
-    #     chat_id=message.from_user.id,
-    #     message_id=message.message_id,
-    # )
-    # user = await User.from_db(message)
-    # next_question_id = await user.next_question_id
-    # question = await Question.from_db(next_question_id)
-    # if question:
-    #     await state.set_state(StartTest.wait_question)
-    #     keyboard = ikb_answers(question=question)
-    #     if question.video_id:
-    #         await bot.send_video(
-    #             chat_id=message.from_user.id,
-    #             video=question.video_id,
-    #             caption=question.text,
-    #             reply_markup=keyboard,
-    #         )
-    #     else:
-    #         await bot.send_message(
-    #             chat_id=message.from_user.id,
-    #             text=question.text,
-    #             reply_markup=keyboard,
-    #         )
-#
-#
-# @command_router.message(Command('add'))
-# async def command_add(message: Message, state: FSMContext):
-#     await message.answer(
-#         text='Пришли вопрос и ответы'
-#     )
-#     await state.set_state(NewQuestion.question_catch)
-#
-#
-# @command_router.message(NewQuestion.question_catch)
-# async def new_question(message: Message, state: FSMContext):
-#     msg = message.caption if message.video else message.text
-#     if not (msg.startswith('0') or msg.startswith('100')):
-#         question_id, question, *answers = msg.split('\n')
-#         video_id = message.video.file_id if message.video else None
-#     else:
-#         question_id, question, *answers = msg.split('\n', 1)
-#         video_id = message.video.file_id if message.video else None
-#     await add_new_question(int(question_id), question, answers, video_id)
-#     await state.clear()

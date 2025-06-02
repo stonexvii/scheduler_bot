@@ -2,13 +2,14 @@ from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from datetime import date, time
+from datetime import date
 
 from classes.contants import MONTHS
-from database.requests import get_day
+from database.requests import get_day, delete_event
 from .fsm_states import AddEvent
-from keyboards.keyboards import ikb_days, ikb_day_menu, ikb_select_month
+from keyboards.keyboards import ikb_days, ikb_day_menu, ikb_select_month, ikb_delete_events
 from keyboards.callback_data import TargetDay
+from misc import time_formater
 
 callback_router = Router()
 
@@ -31,12 +32,11 @@ async def target_day_handler(callback: CallbackQuery, callback_data: TargetDay, 
     )
     day, month, year = callback_data.day, callback_data.month, callback_data.year
     current_date = date(year, month, day)
-    response = await get_day(callback.from_user.id, current_date)
+    response = await get_day(callback_data.user_id, current_date)
     message_text = f'{day} {MONTHS[month].alt} {year}\n'
     if response:
         events = '\n'.join(
-            [f'{event.time.hour:0>2}:{event.time.minute:0>2} - {event.description}' for event in
-             sorted(response, key=lambda x: x.time)],
+            [f'{time_formater(event.time)} - {event.description}' for event in sorted(response, key=lambda x: x.time)],
         )
     else:
         events = 'В этот день нет мероприятий'
@@ -82,19 +82,26 @@ async def add_event(callback: CallbackQuery, callback_data: TargetDay, bot: Bot,
         chat_id=callback.from_user.id,
         message_id=callback.message.message_id,
         text='Введите время и описание мероприятия:',
-        # reply_markup=ikb_select_month(callback_data.user_id, current_date),
     )
 
-# @callback_router.callback_query(TargetDay.filter(F.button == 'de'))
-# async def delete_event(callback: CallbackQuery, callback_data: TargetDay, bot: Bot):
-#     await callback.answer(
-#         text=f'{callback_data.year} {callback_data.month} {callback_data.day}',
-#     )
-#     day, month, year = callback_data.day, callback_data.month, callback_data.year
-#     current_date = date(year, month, day)
-#     await bot.edit_message_text(
-#         chat_id=callback.from_user.id,
-#         message_id=callback.message.message_id,
-#         text='Выберите месяц:',
-#         reply_markup=ikb_select_month(callback_data.user_id, current_date),
-#     )
+
+@callback_router.callback_query(TargetDay.filter(F.button == 'de'))
+async def select_delete_event(callback: CallbackQuery, callback_data: TargetDay, bot: Bot):
+    day, month, year = callback_data.day, callback_data.month, callback_data.year
+    current_date = date(year, month, day)
+    await bot.edit_message_text(
+        chat_id=callback.from_user.id,
+        message_id=callback.message.message_id,
+        text='Какое мероприятие хотите удалить?:',
+        reply_markup=await ikb_delete_events(callback_data.user_id, current_date),
+    )
+
+
+@callback_router.callback_query(TargetDay.filter(F.button == 'ed'))
+async def delete_event_handler(callback: CallbackQuery, callback_data: TargetDay, bot: Bot):
+    await delete_event(callback_data.option)
+    await target_day_handler(callback, callback_data, bot)
+    await callback.answer(
+        text='Событие удалено!',
+        show_alert=True,
+    )

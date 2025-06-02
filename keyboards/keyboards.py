@@ -1,21 +1,13 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from itertools import chain
 
 from classes.classes import EventCalendar
-from classes.contants import MONTHS
+from classes.contants import MONTHS, DIGITS
 from .callback_data import TargetDay
-from database.tables import ScheduleEvent
-
-#
-# from classes.classes import Question
-# from .callback_data import QuestionCB
-#
-#
-
-DIGITS = ['0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
-
+from database.requests import get_day
+from misc import time_formater
 
 def _int_to_str(number: int, busy_days: set[int]) -> str:
     if number:
@@ -26,6 +18,9 @@ def _int_to_str(number: int, busy_days: set[int]) -> str:
             return str_number
         return str(number)
     return ' '
+
+
+
 
 
 async def ikb_days(user_id: int, current_date: date):
@@ -159,27 +154,33 @@ def ikb_select_month(user_id: int, current_date: date):
     keyboard.adjust(3)
     return keyboard.as_markup()
 
-# async def ikb_delete_events(user_id: int, events_date: date)
-# def ikb_answers(question: Question):
-#     keyboard = InlineKeyboardBuilder()
-#     # if question.id:
-#     for answer in question:
-#         keyboard.button(
-#             text=answer.text,
-#             callback_data=QuestionCB(
-#                 button='user_choice',
-#                 question_id=question.id,
-#                 answer_id=answer.id,
-#             ),
-#         )
-#     # else:
-#     #     keyboard.button(
-#     #         text='Начать',
-#     #         callback_data=QuestionCB(
-#     #             button='user_choice',
-#     #             question_id=0,
-#     #             answer_id=0,
-#     #         ),
-#     #     )
-#     keyboard.adjust(1)
-#     return keyboard.as_markup()
+
+async def ikb_delete_events(user_id: int, events_date: date):
+    events = await get_day(user_id, events_date)
+
+    keyboard = InlineKeyboardBuilder()
+
+    for event in sorted(events, key=lambda x: x.time):
+        keyboard.button(
+            text=f'❌ {time_formater(event.time)} - {event.description}',
+            callback_data=TargetDay(
+                button='ed',
+                user_id=user_id,
+                year=events_date.year,
+                month=events_date.month,
+                day=events_date.day,
+                option=event.id,
+            )
+        )
+    keyboard.button(
+        text='Назад',
+        callback_data=TargetDay(
+            button='td',
+            user_id=user_id,
+            year=events_date.year,
+            month=events_date.month,
+            day=events_date.day,
+        )
+    )
+    keyboard.adjust(1),
+    return keyboard.as_markup()
