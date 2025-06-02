@@ -6,7 +6,7 @@ from classes.database import DBSettings
 
 engine = create_async_engine(
     url=DBSettings().db_url,
-    echo=True,
+    echo=False,
 )
 
 async_session = async_sessionmaker(engine)
