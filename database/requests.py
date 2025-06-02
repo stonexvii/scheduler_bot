@@ -1,6 +1,6 @@
 from aiogram.types import Message
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import connection
@@ -10,30 +10,33 @@ from datetime import datetime, date, time
 import calendar
 
 
-def read_data(path: str):
-    result = []
-    with open(path, 'r', encoding='UTF-8') as file:
-        data = [line.strip().split(';;') for line in file.readlines()]
-        for entry in data:
-            year, month, day, event_time, desc = [int(item) if item.isdigit() else item for item in entry]
-            hour, minutes = map(int, event_time.split(':'))
-            event = {
-                'date': date(year, month, day),
-                'time': time(hour, minutes),
-                'description': desc,
-            }
-            result.append(event)
-    return result
+# def read_data(path: str):
+#     result = []
+#     with open(path, 'r', encoding='UTF-8') as file:
+#         data = [line.strip().split(';;') for line in file.readlines()]
+#         for entry in data:
+#             year, month, day, event_time, desc = [int(item) if item.isdigit() else item for item in entry]
+#             hour, minutes = map(int, event_time.split(':'))
+#             event = {
+#                 'date': date(year, month, day),
+#                 'time': time(hour, minutes),
+#                 'description': desc,
+#             }
+#             result.append(event)
+#     return result
 
 
 @connection
-async def add_event(user_id: int, session: AsyncSession):
-    events = read_data('old_db.txt')
-    events.sort(key=lambda x: (x['date'], x['time']))
-    for entry in events:
-        event = ScheduleEvent(user_id=user_id, **entry)
-        session.add(event)
+async def add_event(user_id: int, event_date: date, event_time: time, text: str, session: AsyncSession):
+    event = ScheduleEvent(
+        user_id=user_id,
+        date=event_date,
+        time=event_time,
+        description=text,
+    )
+    session.add(event)
     await session.commit()
+
 
 
 @connection
@@ -62,6 +65,15 @@ async def get_month(user_id: int, current_date: date, session: AsyncSession):
         ),
     )
     return response.all()
+
+
+@connection
+async def delete_event(user_id: int, event_date: date, event_time: time, session: AsyncSession):
+    await session.delete(delete(ScheduleEvent).where(
+        ScheduleEvent.user_id == user_id,
+        ScheduleEvent.date == event_date,
+        ScheduleEvent.time == event_time,
+    ))
 
 
 #
