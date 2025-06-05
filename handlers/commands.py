@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from datetime import date, time
 
 from classes.contants import MONTHS
-from database.requests import add_event, get_day
+from database.requests import add_event, get_day, get_month
 from .fsm_states import AddEvent
 from keyboards.keyboards import ikb_days, ikb_day_menu
 
@@ -65,4 +65,25 @@ async def command_start(message: Message, command: CommandObject):
     await message.answer(
         text=f'{MONTHS[current_date.month].main} {current_date.year}',
         reply_markup=await ikb_days(user_id, current_date)
+    )
+
+
+@command_router.message(Command('count'))
+async def event_counts_by_date(message: Message, command: CommandObject):
+    if command.args:
+        try:
+            year, month, text = [int(entry) if entry.isdigit() else entry for entry in command.args.split()]
+            current_date = date(year, month, 1)
+        except:
+            message_text = 'Для получения статистики используйте команду:\n/count year month text'
+        else:
+            response = await get_month(message.from_user.id, current_date)
+            count = []
+            if response:
+                count = [1 for entry in response if text.lower() in entry.description.lower()]
+            message_text = f'{MONTHS[month].main} {current_date.year} год: {len(count)}'
+    else:
+        message_text = 'Для получения статистики используйте команду:\n/count year month text'
+    await message.answer(
+        text=message_text,
     )

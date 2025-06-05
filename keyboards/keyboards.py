@@ -9,6 +9,7 @@ from .callback_data import TargetDay
 from database.requests import get_day
 from misc import time_formater
 
+
 def _int_to_str(number: int, busy_days: set[int]) -> str:
     if number:
         if number in busy_days:
@@ -20,15 +21,33 @@ def _int_to_str(number: int, busy_days: set[int]) -> str:
     return ' '
 
 
+def _prev_month(current_date: date) -> date:
+    if current_date.month == 1:
+        month = 12
+        year = current_date.year - 1
+    else:
+        month = current_date.month - 1
+        year = current_date.year
+    return current_date.replace(year=year, month=month)
 
+
+def _next_month(current_date: date):
+    if current_date.month == 12:
+        month = 1
+        year = current_date.year + 1
+    else:
+        month = current_date.month + 1
+        year = current_date.year
+    return current_date.replace(year=year, month=month)
 
 
 async def ikb_days(user_id: int, current_date: date):
     month = EventCalendar(current_date)
+    _prev_month(current_date)
     buttons = month.days_buttons()
     busy_days = await month.busy_days(user_id)
-    prev_month = date(current_date.year, current_date.month, 1) - timedelta(days=1)
-    next_month = date(current_date.year, current_date.month, 1) + timedelta(days=33)
+    prev_month = _prev_month(current_date)
+    next_month = _next_month(current_date)
 
     keyboard = InlineKeyboardBuilder()
     keyboard.button(

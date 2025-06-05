@@ -27,24 +27,28 @@ async def main_menu(callback: CallbackQuery, callback_data: TargetDay, bot: Bot)
 
 @callback_router.callback_query(TargetDay.filter(F.button == 'td'))
 async def target_day_handler(callback: CallbackQuery, callback_data: TargetDay, bot: Bot):
-    await callback.answer(
-        text=f'{callback_data.year} {callback_data.month} {callback_data.day}',
-    )
     day, month, year = callback_data.day, callback_data.month, callback_data.year
-    current_date = date(year, month, day)
-    response = await get_day(callback_data.user_id, current_date)
-    message_text = f'{day} {MONTHS[month].alt} {year}\n'
-    if response:
-        events = '\n'.join(
-            [f'{time_formater(event.time)} - {event.description}' for event in sorted(response, key=lambda x: x.time)],
+    inline_message = 'Нет такого дня'
+    if day:
+        inline_message = f'{day} {MONTHS[month].alt} {year}'
+        current_date = date(year, month, day)
+        response = await get_day(callback_data.user_id, current_date)
+        message_text = f'{inline_message}\n'
+        if response:
+            events = '\n'.join(
+                [f'{time_formater(event.time)} - {event.description}' for event in
+                 sorted(response, key=lambda x: x.time)],
+            )
+        else:
+            events = 'В этот день нет мероприятий'
+        await bot.edit_message_text(
+            chat_id=callback.from_user.id,
+            message_id=callback.message.message_id,
+            text=message_text + events,
+            reply_markup=ikb_day_menu(callback_data.user_id, current_date, callback.from_user.id),
         )
-    else:
-        events = 'В этот день нет мероприятий'
-    await bot.edit_message_text(
-        chat_id=callback.from_user.id,
-        message_id=callback.message.message_id,
-        text=message_text + events,
-        reply_markup=ikb_day_menu(callback_data.user_id, current_date, callback.from_user.id),
+    await callback.answer(
+        text=inline_message,
     )
 
 
