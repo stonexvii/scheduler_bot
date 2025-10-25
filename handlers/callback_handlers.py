@@ -1,15 +1,15 @@
-from aiogram import Bot, Router, F
-from aiogram.types import CallbackQuery
-from aiogram.fsm.context import FSMContext
-
 from datetime import date
 
-from classes.contants import MONTHS
+from aiogram import Bot, Router, F
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery
+
+from classes import EventCalendar
 from database.requests import get_day, delete_event
-from .fsm_states import AddEvent
-from keyboards.keyboards import ikb_days, ikb_day_menu, ikb_select_month, ikb_delete_events
 from keyboards.callback_data import TargetDay
+from keyboards.keyboards import ikb_days, ikb_day_menu, ikb_select_month, ikb_delete_events
 from misc import time_formater
+from .fsm_states import AddEvent
 
 callback_router = Router()
 
@@ -20,7 +20,7 @@ async def main_menu(callback: CallbackQuery, callback_data: TargetDay, bot: Bot)
     await bot.edit_message_text(
         chat_id=callback.from_user.id,
         message_id=callback.message.message_id,
-        text=f'{MONTHS[current_date.month].main} {current_date.year}',
+        text=f'{EventCalendar.MONTHS[current_date.month].main} {current_date.year}',
         reply_markup=await ikb_days(callback_data.user_id, current_date),
     )
 
@@ -30,7 +30,7 @@ async def target_day_handler(callback: CallbackQuery, callback_data: TargetDay, 
     day, month, year = callback_data.day, callback_data.month, callback_data.year
     inline_message = 'Нет такого дня'
     if day:
-        inline_message = f'{day} {MONTHS[month].alt} {year}'
+        inline_message = f'{day} {EventCalendar.MONTHS[month].alt} {year}'
         current_date = date(year, month, day)
         response = await get_day(callback_data.user_id, current_date)
         message_text = f'{inline_message}\n'

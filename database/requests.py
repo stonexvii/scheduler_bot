@@ -1,13 +1,11 @@
-from aiogram.types import Message
+import calendar
+from datetime import date, time
 
-from sqlalchemy import select, delete
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import connection
 from .tables import ScheduleEvent
-from datetime import date, time
-
-import calendar
 
 
 @connection

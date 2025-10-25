@@ -1,8 +1,8 @@
-from sqlalchemy import String, BigInteger, Integer, ForeignKey, Date, Time, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-from sqlalchemy.ext.asyncio import AsyncAttrs
-
 from datetime import date, time
+
+from sqlalchemy import String, BigInteger, Integer, Date, Time, Boolean
+from sqlalchemy.ext.asyncio import AsyncAttrs
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 
 class Base(AsyncAttrs, DeclarativeBase):

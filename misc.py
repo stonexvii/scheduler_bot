@@ -1,12 +1,25 @@
-from datetime import time
+from datetime import time, datetime
+
+
+def timestamp():
+    now = datetime.now()
+    return now.strftime('%H:%M:%S %D/%m/%Y')
+
+
+def print_message(message: str):
+    print('=' * len(message))
+    print(message)
+    print('=' * len(message))
 
 
 def on_start():
-    print('Bot is started!')
+    msg = f'Bot is started at {timestamp()}'
+    print_message(msg)
 
 
 def on_shutdown():
-    print('Bot is shutdown...')
+    msg = f'Bot is shutdown at {timestamp()}'
+    print_message(msg)
 
 
 def time_formater(current_time: time):
