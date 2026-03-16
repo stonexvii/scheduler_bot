@@ -21,7 +21,7 @@ async def main_menu(callback: CallbackQuery, callback_data: TargetDay, bot: Bot)
         chat_id=callback.from_user.id,
         message_id=callback.message.message_id,
         text=f'{EventCalendar.MONTHS[current_date.month].main} {current_date.year}',
-        reply_markup=await ikb_days(callback_data.user_id, current_date),
+        reply_markup=await ikb_days(current_date),
     )
 
 
@@ -32,7 +32,7 @@ async def target_day_handler(callback: CallbackQuery, callback_data: TargetDay, 
     if day:
         inline_message = f'{day} {EventCalendar.MONTHS[month].alt} {year}'
         current_date = date(year, month, day)
-        response = await get_day(callback_data.user_id, current_date)
+        response = await get_day(current_date)
         message_text = f'{inline_message}\n'
         if response:
             events = '\n'.join(
@@ -45,7 +45,7 @@ async def target_day_handler(callback: CallbackQuery, callback_data: TargetDay, 
             chat_id=callback.from_user.id,
             message_id=callback.message.message_id,
             text=message_text + events,
-            reply_markup=ikb_day_menu(callback_data.user_id, current_date, callback.from_user.id),
+            reply_markup=ikb_day_menu(callback.from_user.id, current_date),
         )
     await callback.answer(
         text=inline_message,
@@ -63,7 +63,7 @@ async def select_month(callback: CallbackQuery, callback_data: TargetDay, bot: B
         chat_id=callback.from_user.id,
         message_id=callback.message.message_id,
         text='Выберите месяц:',
-        reply_markup=ikb_select_month(callback_data.user_id, current_date),
+        reply_markup=ikb_select_month(current_date),
     )
 
 
@@ -76,7 +76,6 @@ async def add_event(callback: CallbackQuery, callback_data: TargetDay, bot: Bot,
     day, month, year = callback_data.day, callback_data.month, callback_data.year
     current_date = date(year, month, day)
     data = {
-        'user_id': callback_data.user_id,
         'date': current_date,
         'chat_id': callback.from_user.id,
         'message_id': callback.message.message_id,
@@ -97,7 +96,7 @@ async def select_delete_event(callback: CallbackQuery, callback_data: TargetDay,
         chat_id=callback.from_user.id,
         message_id=callback.message.message_id,
         text='Какое мероприятие хотите удалить?:',
-        reply_markup=await ikb_delete_events(callback_data.user_id, current_date),
+        reply_markup=await ikb_delete_events(current_date),
     )
 
 

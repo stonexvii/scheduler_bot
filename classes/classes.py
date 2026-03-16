@@ -39,8 +39,8 @@ class EventCalendar:
         next_month = (self._first_day + timedelta(days=31)).replace(day=1)
         return previous_month, next_month
 
-    async def busy_days(self, user_id: int):
-        events = await get_month(user_id, self.date)
+    async def busy_days(self):
+        events = await get_month(self.date)
         events = {event.date.day for event in events}
         return events
 

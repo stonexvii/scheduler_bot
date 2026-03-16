@@ -7,6 +7,8 @@ DataBase = namedtuple('DataBase', ['password', 'user', 'name', 'host', 'port'])
 dotenv.load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+USER_TG_ID = int(os.getenv('USER_TG_ID'))
+
 DB = DataBase(
     os.getenv('DB_PASSWORD'),
     os.getenv('DB_USER'),

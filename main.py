@@ -9,7 +9,9 @@ from misc import *
 
 
 async def start_bot():
-    bot = Bot(config.BOT_TOKEN)
+    bot = Bot(
+        token=config.BOT_TOKEN,
+    )
     dp = Dispatcher()
     await create_tables()
     dp.startup.register(on_start)

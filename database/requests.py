@@ -9,22 +9,20 @@ from .tables import ScheduleEvent
 
 
 @connection
-async def add_event(user_id: int, event_date: date, event_time: time, text: str, session: AsyncSession):
+async def add_event(event_date: date, event_time: time, text: str, session: AsyncSession):
     event = ScheduleEvent(
-        user_id=user_id,
+        description=text,
         date=event_date,
         time=event_time,
-        description=text,
     )
     session.add(event)
     await session.commit()
 
 
 @connection
-async def get_day(user_id: int, current_date: date, session: AsyncSession):
+async def get_day(current_date: date, session: AsyncSession):
     response = await session.scalars(
         select(ScheduleEvent).where(
-            ScheduleEvent.user_id == user_id,
             ScheduleEvent.date == current_date,
         ),
     )
@@ -32,13 +30,12 @@ async def get_day(user_id: int, current_date: date, session: AsyncSession):
 
 
 @connection
-async def get_month(user_id: int, current_date: date, session: AsyncSession):
+async def get_month(current_date: date, session: AsyncSession):
     year = current_date.year
     month = current_date.month
     first_day, last_day = 1, calendar.monthrange(year, month)[1]
     response = await session.scalars(
         select(ScheduleEvent).where(
-            ScheduleEvent.user_id == user_id,
             ScheduleEvent.date.between(
                 date(year, month, first_day),
                 date(year, month, last_day),

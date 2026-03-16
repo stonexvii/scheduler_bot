@@ -13,6 +13,15 @@ from .fsm_states import AddEvent
 command_router = Router()
 
 
+@command_router.message(Command('start'))
+async def command_start(message: Message):
+    current_date = date.today()
+    await message.answer(
+        text=f'{EventCalendar.MONTHS[current_date.month].main} {current_date.year}',
+        reply_markup=await ikb_days(current_date)
+    )
+
+
 @command_router.message(AddEvent.wait)
 async def catch_new_event(message: Message, bot: Bot, state: FSMContext):
     data = await state.get_data()
@@ -39,8 +48,8 @@ async def catch_new_event(message: Message, bot: Bot, state: FSMContext):
             case _:
                 event_time = None
         if event_time:
-            await add_event(message.from_user.id, current_date, event_time, description)
-    response = await get_day(message.from_user.id, current_date)
+            await add_event(current_date, event_time, description)
+    response = await get_day(current_date)
     message_text = f'{current_date.day} {EventCalendar.MONTHS[current_date.month].alt} {current_date.year}\n'
     if response:
         events = '\n'.join(
@@ -53,19 +62,9 @@ async def catch_new_event(message: Message, bot: Bot, state: FSMContext):
         chat_id=data['chat_id'],
         message_id=data['message_id'],
         text=message_text + events,
-        reply_markup=ikb_day_menu(data['user_id'], current_date, message.from_user.id),
+        reply_markup=ikb_day_menu(message.from_user.id, current_date),
     )
     await state.clear()
-
-
-@command_router.message(Command('start'))
-async def command_start(message: Message, command: CommandObject):
-    current_date = date.today()
-    user_id = int(command.args) if command.args else message.from_user.id
-    await message.answer(
-        text=f'{EventCalendar.MONTHS[current_date.month].main} {current_date.year}',
-        reply_markup=await ikb_days(user_id, current_date)
-    )
 
 
 @command_router.message(Command('count'))
