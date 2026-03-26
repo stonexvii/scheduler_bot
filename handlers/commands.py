@@ -76,7 +76,7 @@ async def event_counts_by_date(message: Message, command: CommandObject):
         except:
             message_text = 'Для получения статистики используйте команду:\n/count year month text'
         else:
-            response = await get_month(message.from_user.id, current_date)
+            response = await get_month(current_date)
             count = []
             if response:
                 count = [1 for entry in response if text.lower() in entry.description.lower()]
